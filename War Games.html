@@ -25,6 +25,11 @@
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
+        .game-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
         .date-log {
             text-align: right;
             width: 300px;
@@ -117,6 +122,11 @@
     <div class="container">
         <div class="header">
             <h1>VILLAGE WAR - Incremental Idle Game</h1>
+            <div class="game-controls">
+                <button id="pause-btn" onclick="togglePause()">PAUSE</button>
+                <button onclick="saveGame()">SAVE</button>
+                <button onclick="loadGame()">LOAD</button>
+            </div>
             <div class="date-log">
                 <div id="season-info">Season: SPRING | Day: 1/90</div>
                 <div class="season-bar">
@@ -152,11 +162,11 @@
             <div class="section">
                 <h2>BUILDINGS</h2>
                 <div id="buildings">
-                    <div class="building-line">Houses: 0 | <button onclick="buyBuilding('house')">Buy House (5 Wood)</button></div>
-                    <div class="building-line">Libraries: 0 | <button onclick="buyBuilding('library')">Buy Library (3 Wood)</button></div>
-                    <div class="building-line">Fields: 0 | <button onclick="buyBuilding('field')">Buy Field (2 Wood)</button></div>
-                    <div class="building-line">Mines: 0 | <button onclick="buyBuilding('mine')">Buy Mine (4 Wood)</button></div>
-                    <div class="building-line">Smelters: 0 | <button onclick="buyBuilding('smelter')" id="smelter-btn" disabled>Buy Smelter (200 Stone)</button></div>
+                    <div class="building-line">Houses: 0 | <button onclick="buyBuilding('house')">Buy House (15 Wood)</button></div>
+                    <div class="building-line">Libraries: 0 | <button onclick="buyBuilding('library')">Buy Library (25 Wood)</button></div>
+                    <div class="building-line">Fields: 0 | <button onclick="buyBuilding('field')">Buy Field (25 Wood)</button></div>
+                    <div class="building-line">Mines: 0 | <button onclick="buyBuilding('mine')">Buy Mine (50 Wood)</button></div>
+                    <div class="building-line">Smelters: 0 | <button onclick="buyBuilding('smelter')" id="smelter-btn" disabled>Buy Smelter (100 Stone)</button></div>
                 </div>
             </div>
         </div>
@@ -276,6 +286,7 @@
         };
 
         let currentTab = 'resources';
+        let isPaused = false;
         const seasons = ['SPRING', 'SUMMER', 'FALL', 'WINTER'];
         const seasonDuration = 270000; // 90 days * 3 seconds = 270 seconds
         const dayDuration = 3000; // 3 seconds per day
@@ -299,6 +310,64 @@
             const logEl = document.getElementById('event-log');
             logEl.innerHTML += '<br>' + message;
             logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            const pauseBtn = document.getElementById('pause-btn');
+            pauseBtn.textContent = isPaused ? 'PLAY' : 'PAUSE';
+            if (!isPaused) {
+                gameState.lastUpdate = Date.now(); // Reset timer to prevent time jump
+            }
+        }
+
+        function saveGame() {
+            try {
+                const saveData = JSON.stringify(gameState);
+                // Create a temporary download link
+                const blob = new Blob([saveData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'village_war_save.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                log('Game saved successfully!');
+            } catch (error) {
+                log('Error saving game: ' + error.message);
+            }
+        }
+
+        function loadGame() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const loadedData = JSON.parse(e.target.result);
+                            // Validate the loaded data has required properties
+                            if (loadedData.food !== undefined && loadedData.wood !== undefined) {
+                                gameState = { ...gameState, ...loadedData };
+                                gameState.lastUpdate = Date.now(); // Reset timer
+                                updateDisplay();
+                                log('Game loaded successfully!');
+                            } else {
+                                log('Invalid save file format!');
+                            }
+                        } catch (error) {
+                            log('Error loading game: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
         }
 
         function updateDisplay() {
@@ -397,11 +466,11 @@
 
         function getBuildingCost(type) {
             const baseCosts = {
-                house: 5,
-                library: 3,
-                field: 2,
-                mine: 4,
-                smelter: 200
+                house: 15,
+                library: 25,
+                field: 25,
+                mine: 50,
+                smelter: 100
             };
             
             const buildingKey = type === 'house' ? 'houses' : type + 's';
@@ -483,6 +552,8 @@
         }
 
         function gameLoop() {
+            if (isPaused) return;
+            
             const now = Date.now();
             const deltaTime = now - gameState.lastUpdate;
             gameState.lastUpdate = now;
@@ -573,14 +644,7 @@
                 log(`<span class="warning">Attack successful! Lost ${Math.floor(foodLost)} food and ${Math.floor(woodLost)} wood!</span>`);
             }
         }
-	function getBuildingCost(type) {
-            	const baseCosts = {
-                house: 15,
-                library: 25,
-                field: 25,
-                mine: 50,
-                smelter: 100
-            };
+
         // Start the game loop
         setInterval(gameLoop, 100);
         updateDisplay();
