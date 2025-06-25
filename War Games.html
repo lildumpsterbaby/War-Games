@@ -249,7 +249,7 @@
             
             // Buildings
             houses: 0,
-            libraries: 0,
+            librarys: 0,
             fields: 0,
             mines: 0,
             smelters: 0,
@@ -644,6 +644,26 @@
                 log(`<span class="warning">Attack successful! Lost ${Math.floor(foodLost)} food and ${Math.floor(woodLost)} wood!</span>`);
             }
         }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Change GameState ID Display</title>
+</head>
+<body>
+  <div id="gamestate-id">librarys</div>
+  <script>
+    // Select the element with the ID 'gamestate-id'
+    const gameStateElement = document.getElementById('gamestate-id');
+
+    // Check if the text content is 'librarys' and update it to 'libraries'
+    if (gameStateElement.textContent === 'librarys') {
+      gameStateElement.textContent = 'libraries';
+    }
+  </script>
+</body>
+</html>
 
         // Start the game loop
         setInterval(gameLoop, 100);
