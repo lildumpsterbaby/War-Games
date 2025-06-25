@@ -163,7 +163,7 @@
                 <h2>BUILDINGS</h2>
                 <div id="buildings">
                     <div class="building-line">Houses: 0 | <button onclick="buyBuilding('house')">Buy House (15 Wood)</button></div>
-                    <div class="building-line">Libraries: 0 | <button onclick="buyBuilding('library')">Buy Library (25 Wood)</button></div>
+                    <div class="building-line">Librarys: 0 | <button onclick="buyBuilding('library')">Buy Library (25 Wood)</button></div>
                     <div class="building-line">Fields: 0 | <button onclick="buyBuilding('field')">Buy Field (15 Wood)</button></div>
                     <div class="building-line">Mines: 0 | <button onclick="buyBuilding('mine')">Buy Mine (50 Wood)</button></div>
                     <div class="building-line">Smelters: 0 | <button onclick="buyBuilding('smelter')" id="smelter-btn" disabled>Buy Smelter (100 Stone)</button></div>
@@ -393,7 +393,7 @@
             // Buildings
             document.getElementById('buildings').innerHTML = `
                 <div class="building-line">Houses: ${gameState.houses} | <button onclick="buyBuilding('house')" ${gameState.wood < getBuildingCost('house') ? 'disabled' : ''}>Buy House (${getBuildingCost('house')} Wood)</button></div>
-                <div class="building-line">Libraries: ${gameState.librarys} | <button onclick="buyBuilding('library')" ${gameState.wood < getBuildingCost('library') ? 'disabled' : ''}>Buy Library (${getBuildingCost('library')} Wood)</button></div>
+                <div class="building-line">Librarys: ${gameState.librarys} | <button onclick="buyBuilding('library')" ${gameState.wood < getBuildingCost('library') ? 'disabled' : ''}>Buy Library (${getBuildingCost('library')} Wood)</button></div>
                 <div class="building-line">Fields: ${gameState.fields} | <button onclick="buyBuilding('field')" ${gameState.wood < getBuildingCost('field') ? 'disabled' : ''}>Buy Field (${getBuildingCost('field')} Wood)</button></div>
                 <div class="building-line">Mines: ${gameState.mines} | <button onclick="buyBuilding('mine')" ${gameState.wood < getBuildingCost('mine') ? 'disabled' : ''}>Buy Mine (${getBuildingCost('mine')} Wood)</button></div>
                 <div class="building-line">Smelters: ${gameState.smelters} | <button onclick="buyBuilding('smelter')" ${!gameState.tech.smelting || gameState.stone < getBuildingCost('smelter') ? 'disabled' : ''}>Buy Smelter (${getBuildingCost('smelter')} Stone)</button></div>
