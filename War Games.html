@@ -163,7 +163,7 @@
                 <h2>BUILDINGS</h2>
                 <div id="buildings">
                     <div class="building-line">Houses: 0 | <button onclick="buyBuilding('house')">Buy House (15 Wood)</button></div>
-                    <div class="building-line">Libraries: 0 | <button onclick="buyBuilding('library')">Buy Library (25 Wood)</button></div>
+                    <div class="building-line">librarys: 0 | <button onclick="buyBuilding('library')">Buy Library (25 Wood)</button></div>
                     <div class="building-line">Fields: 0 | <button onclick="buyBuilding('field')">Buy Field (15 Wood)</button></div>
                     <div class="building-line">Mines: 0 | <button onclick="buyBuilding('mine')">Buy Mine (50 Wood)</button></div>
                     <div class="building-line">Smelters: 0 | <button onclick="buyBuilding('smelter')" id="smelter-btn" disabled>Buy Smelter (100 Stone)</button></div>
@@ -249,7 +249,7 @@
             
             // Buildings
             houses: 0,
-            libraries: 0,
+            librarys: 0,
             fields: 0,
             mines: 0,
             smelters: 0,
@@ -393,7 +393,7 @@
             // Buildings
             document.getElementById('buildings').innerHTML = `
                 <div class="building-line">Houses: ${gameState.houses} | <button onclick="buyBuilding('house')" ${gameState.wood < getBuildingCost('house') ? 'disabled' : ''}>Buy House (${getBuildingCost('house')} Wood)</button></div>
-                <div class="building-line">Libraries: ${gameState.libraries} | <button onclick="buyBuilding('library')" ${gameState.wood < getBuildingCost('library') ? 'disabled' : ''}>Buy Library (${getBuildingCost('library')} Wood)</button></div>
+                <div class="building-line">librarys: ${gameState.librarys} | <button onclick="buyBuilding('library')" ${gameState.wood < getBuildingCost('library') ? 'disabled' : ''}>Buy Library (${getBuildingCost('library')} Wood)</button></div>
                 <div class="building-line">Fields: ${gameState.fields} | <button onclick="buyBuilding('field')" ${gameState.wood < getBuildingCost('field') ? 'disabled' : ''}>Buy Field (${getBuildingCost('field')} Wood)</button></div>
                 <div class="building-line">Mines: ${gameState.mines} | <button onclick="buyBuilding('mine')" ${gameState.wood < getBuildingCost('mine') ? 'disabled' : ''}>Buy Mine (${getBuildingCost('mine')} Wood)</button></div>
                 <div class="building-line">Smelters: ${gameState.smelters} | <button onclick="buyBuilding('smelter')" ${!gameState.tech.smelting || gameState.stone < getBuildingCost('smelter') ? 'disabled' : ''}>Buy Smelter (${getBuildingCost('smelter')} Stone)</button></div>
@@ -416,13 +416,13 @@
             document.getElementById('jobs').innerHTML = `
                 <div class="job-line">Idle: ${gameState.idle}</div>
                 <div class="job-line">Farmers: ${gameState.farmers} | <button onclick="assignJob('farmer')" ${!gameState.tech.farming || gameState.idle === 0 || gameState.fields === 0 ? 'disabled' : ''}>Assign Farmer</button></div>
-                <div class="job-line">Librarians: ${gameState.librarians} | <button onclick="assignJob('librarian')" ${gameState.idle === 0 || gameState.libraries === 0 ? 'disabled' : ''}>Assign Librarian</button></div>
+                <div class="job-line">Librarians: ${gameState.librarians} | <button onclick="assignJob('librarian')" ${gameState.idle === 0 || gameState.librarys === 0 ? 'disabled' : ''}>Assign Librarian</button></div>
                 <div class="job-line">Miners: ${gameState.miners} | <button onclick="assignJob('miner')" ${!gameState.tech.mining || gameState.idle === 0 || gameState.mines === 0 ? 'disabled' : ''}>Assign Miner</button></div>
                 <div class="job-line">Soldiers: ${gameState.soldiers} | <button onclick="assignJob('soldier')" ${gameState.idle === 0 || (gameState.knives === 0 && gameState.swords === 0) ? 'disabled' : ''}>Assign Soldier</button></div>
             `;
 
             // Science tab
-            const scienceRate = gameState.libraries * 0.2 + gameState.librarians * 1;
+            const scienceRate = gameState.librarys * 0.2 + gameState.librarians * 1;
             document.getElementById('science-display').textContent = Math.floor(gameState.science);
             document.getElementById('science-rate').textContent = scienceRate.toFixed(1);
             
@@ -510,7 +510,7 @@
             if (gameState.idle > 0) {
                 const requirements = {
                     farmer: gameState.tech.farming && gameState.fields > 0,
-                    librarian: gameState.libraries > 0,
+                    librarian: gameState.librarys > 0,
                     miner: gameState.tech.mining && gameState.mines > 0,
                     soldier: gameState.knives > 0 || gameState.swords > 0
                 };
@@ -575,8 +575,8 @@
                 gameState.gold += gameState.smelters * 0.1 * deltaSeconds;
             }
             
-            // Science (libraries + librarians)
-            const scienceRate = gameState.libraries * 0.2 + gameState.librarians * 1;
+            // Science (librarys + librarians)
+            const scienceRate = gameState.librarys * 0.2 + gameState.librarians * 1;
             gameState.science += scienceRate * deltaSeconds;
             
             // Manpower (soldiers)
