@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Village War - Incremental Idle Game</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #fff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .date-log {
+            text-align: right;
+            width: 300px;
+        }
+        .season-bar {
+            width: 200px;
+            height: 15px;
+            border: 1px solid #fff;
+            margin: 5px 0;
+            position: relative;
+        }
+        .season-progress {
+            height: 100%;
+            background-color: #333;
+        }
+        .log {
+            height: 80px;
+            overflow-y: scroll;
+            border: 1px solid #fff;
+            padding: 5px;
+            background-color: #111;
+            font-size: 11px;
+            width: 280px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #fff;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid #fff;
+            border-bottom: none;
+            margin-right: 5px;
+            background-color: #000;
+        }
+        .tab.active {
+            background-color: #333;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .section {
+            border: 1px solid #fff;
+            margin: 10px 0;
+            padding: 15px;
+        }
+        .section h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #fff;
+            padding-bottom: 5px;
+        }
+        .resource-line, .building-line, .job-line, .tech-line {
+            margin: 5px 0;
+        }
+        button {
+            background-color: #000;
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 5px 10px;
+            margin: 2px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover {
+            background-color: #333;
+        }
+        button:disabled {
+            color: #666;
+            cursor: not-allowed;
+        }
+        .warning {
+            color: #fff;
+            font-weight: bold;
+        }
+        .two-column {
+            display: flex;
+            gap: 20px;
+        }
+        .column {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>VILLAGE WAR - Incremental Idle Game</h1>
+            <div class="date-log">
+                <div id="season-info">Season: SPRING | Day: 1/90</div>
+                <div class="season-bar">
+                    <div class="season-progress" id="season-progress"></div>
+                </div>
+                <div class="log" id="event-log">
+                    Game started. Build your first house to attract villagers.
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('resources')">RESOURCES</div>
+            <div class="tab" onclick="switchTab('population')">POPULATION & JOBS</div>
+            <div class="tab" onclick="switchTab('science')">SCIENCE</div>
+            <div class="tab" onclick="switchTab('defense')">WEAPONS & DEFENSE</div>
+        </div>
+
+        <div id="resources" class="tab-content active">
+            <div class="section">
+                <h2>RESOURCES</h2>
+                <div id="resources-display">
+                    <div class="resource-line">Food: 0 (+0/sec)</div>
+                    <div class="resource-line">Wood: 0</div>
+                    <div class="resource-line">Stone: 0 (+0/sec)</div>
+                    <div class="resource-line">Iron: 0 (+0/sec)</div>
+                    <div class="resource-line">Gold: 0 (+0/sec)</div>
+                </div>
+                <button onclick="gatherFood()">Gather Food</button>
+                <button onclick="exchangeFood()" id="exchange-btn">Exchange 10 Food for 1 Wood</button>
+            </div>
+
+            <div class="section">
+                <h2>BUILDINGS</h2>
+                <div id="buildings">
+                    <div class="building-line">Houses: 0 | <button onclick="buyBuilding('house')">Buy House (5 Wood)</button></div>
+                    <div class="building-line">Libraries: 0 | <button onclick="buyBuilding('library')">Buy Library (3 Wood)</button></div>
+                    <div class="building-line">Fields: 0 | <button onclick="buyBuilding('field')">Buy Field (2 Wood)</button></div>
+                    <div class="building-line">Mines: 0 | <button onclick="buyBuilding('mine')">Buy Mine (4 Wood)</button></div>
+                    <div class="building-line">Smelters: 0 | <button onclick="buyBuilding('smelter')" id="smelter-btn" disabled>Buy Smelter (200 Stone)</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="population" class="tab-content">
+            <div class="two-column">
+                <div class="column">
+                    <div class="section">
+                        <h2>POPULATION</h2>
+                        <div id="population-display">
+                            <div>Villagers: 0 (Capacity: 0)</div>
+                            <div>Next Birth: --</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="section">
+                        <h2>JOBS & WORKERS</h2>
+                        <div id="jobs">
+                            <div class="job-line">Idle: 0</div>
+                            <div class="job-line">Farmers: 0 | <button onclick="assignJob('farmer')" disabled id="farmer-btn">Assign Farmer</button></div>
+                            <div class="job-line">Librarians: 0 | <button onclick="assignJob('librarian')" disabled>Assign Librarian</button></div>
+                            <div class="job-line">Miners: 0 | <button onclick="assignJob('miner')" disabled id="miner-btn">Assign Miner</button></div>
+                            <div class="job-line">Soldiers: 0 | <button onclick="assignJob('soldier')" disabled id="soldier-btn">Assign Soldier</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="science" class="tab-content">
+            <div class="section">
+                <h2>SCIENCE & TECHNOLOGY</h2>
+                <div class="resource-line">Science: <span id="science-display">0</span> (+<span id="science-rate">0</span>/sec)</div>
+                <br>
+                <div id="technology">
+                    <div class="tech-line">Farming: <button onclick="researchTech('farming')" id="farming-btn">Research (100 Science)</button></div>
+                    <div class="tech-line">Mining: <button onclick="researchTech('mining')" id="mining-btn" disabled>Research (250 Science)</button></div>
+                    <div class="tech-line">Smelting: <button onclick="researchTech('smelting')" id="smelting-btn" disabled>Research (300 Science)</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="defense" class="tab-content">
+            <div class="two-column">
+                <div class="column">
+                    <div class="section">
+                        <h2>WEAPONS</h2>
+                        <div id="weapons">
+                            <div>Knives: 0 | <button onclick="craftWeapon('knife')" id="knife-btn" disabled>Craft Knife (2 Iron)</button></div>
+                            <div>Swords: 0 | <button onclick="craftWeapon('sword')" id="sword-btn" disabled>Craft Sword (5 Iron)</button></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="section">
+                        <h2>DEFENSE</h2>
+                        <div id="defense-display">
+                            <div>Manpower: 0 (+0/sec)</div>
+                            <div>Defense Rating: 0</div>
+                            <div>Soldiers: 0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            // Resources
+            food: 0,
+            wood: 0,
+            stone: 0,
+            iron: 0,
+            gold: 0,
+            science: 0,
+            manpower: 0,
+            
+            // Buildings
+            houses: 0,
+            libraries: 0,
+            fields: 0,
+            mines: 0,
+            smelters: 0,
+            
+            // Population
+            villagers: 0,
+            nextBirth: null,
+            
+            // Jobs
+            idle: 0,
+            farmers: 0,
+            librarians: 0,
+            miners: 0,
+            soldiers: 0,
+            
+            // Technology
+            tech: {
+                farming: false,
+                mining: false,
+                smelting: false
+            },
+            
+            // Weapons
+            knives: 0,
+            swords: 0,
+            
+            // Season system
+            season: 'SPRING',
+            day: 1,
+            seasonProgress: 0,
+            
+            // Last update time
+            lastUpdate: Date.now()
+        };
+
+        let currentTab = 'resources';
+        const seasons = ['SPRING', 'SUMMER', 'FALL', 'WINTER'];
+        const seasonDuration = 270000; // 90 days * 3 seconds = 270 seconds
+        const dayDuration = 3000; // 3 seconds per day
+        
+        function switchTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tabEl => {
+                tabEl.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+            currentTab = tab;
+        }
+        
+        function log(message) {
+            const logEl = document.getElementById('event-log');
+            logEl.innerHTML += '<br>' + message;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function updateDisplay() {
+            // Season and day info
+            const currentDay = Math.floor(gameState.seasonProgress * 90) + 1;
+            document.getElementById('season-info').textContent = `Season: ${gameState.season} | Day: ${currentDay}/90`;
+            document.getElementById('season-progress').style.width = (gameState.seasonProgress * 100) + '%';
+
+            // Resources tab
+            const foodRate = gameState.fields * 0.5 + gameState.farmers * 2 - gameState.villagers * 0.2;
+            const stoneRate = gameState.mines * 0.3 + gameState.miners * 1.5;
+            const ironRate = gameState.smelters * 0.8;
+            const goldRate = gameState.smelters * 0.1;
+            
+            document.getElementById('resources-display').innerHTML = `
+                <div class="resource-line">Food: ${Math.floor(gameState.food)} (+${foodRate.toFixed(1)}/sec)</div>
+                <div class="resource-line">Wood: ${Math.floor(gameState.wood)}</div>
+                <div class="resource-line">Stone: ${Math.floor(gameState.stone)} (+${stoneRate.toFixed(1)}/sec)</div>
+                <div class="resource-line">Iron: ${Math.floor(gameState.iron)} (+${ironRate.toFixed(1)}/sec)</div>
+                <div class="resource-line">Gold: ${Math.floor(gameState.gold)} (+${goldRate.toFixed(1)}/sec)</div>
+            `;
+
+            // Buildings
+            document.getElementById('buildings').innerHTML = `
+                <div class="building-line">Houses: ${gameState.houses} | <button onclick="buyBuilding('house')" ${gameState.wood < getBuildingCost('house') ? 'disabled' : ''}>Buy House (${getBuildingCost('house')} Wood)</button></div>
+                <div class="building-line">Libraries: ${gameState.libraries} | <button onclick="buyBuilding('library')" ${gameState.wood < getBuildingCost('library') ? 'disabled' : ''}>Buy Library (${getBuildingCost('library')} Wood)</button></div>
+                <div class="building-line">Fields: ${gameState.fields} | <button onclick="buyBuilding('field')" ${gameState.wood < getBuildingCost('field') ? 'disabled' : ''}>Buy Field (${getBuildingCost('field')} Wood)</button></div>
+                <div class="building-line">Mines: ${gameState.mines} | <button onclick="buyBuilding('mine')" ${gameState.wood < getBuildingCost('mine') ? 'disabled' : ''}>Buy Mine (${getBuildingCost('mine')} Wood)</button></div>
+                <div class="building-line">Smelters: ${gameState.smelters} | <button onclick="buyBuilding('smelter')" ${!gameState.tech.smelting || gameState.stone < getBuildingCost('smelter') ? 'disabled' : ''}>Buy Smelter (${getBuildingCost('smelter')} Stone)</button></div>
+            `;
+
+            // Population tab
+            const capacity = gameState.houses * 2;
+            let birthText = '--';
+            if (gameState.nextBirth) {
+                const timeLeft = Math.max(0, gameState.nextBirth - Date.now());
+                birthText = Math.ceil(timeLeft / 1000) + 's';
+            }
+            
+            document.getElementById('population-display').innerHTML = `
+                <div>Villagers: ${gameState.villagers} (Capacity: ${capacity})</div>
+                <div>Next Birth: ${birthText}</div>
+            `;
+
+            // Jobs
+            document.getElementById('jobs').innerHTML = `
+                <div class="job-line">Idle: ${gameState.idle}</div>
+                <div class="job-line">Farmers: ${gameState.farmers} | <button onclick="assignJob('farmer')" ${!gameState.tech.farming || gameState.idle === 0 || gameState.fields === 0 ? 'disabled' : ''}>Assign Farmer</button></div>
+                <div class="job-line">Librarians: ${gameState.librarians} | <button onclick="assignJob('librarian')" ${gameState.idle === 0 || gameState.libraries === 0 ? 'disabled' : ''}>Assign Librarian</button></div>
+                <div class="job-line">Miners: ${gameState.miners} | <button onclick="assignJob('miner')" ${!gameState.tech.mining || gameState.idle === 0 || gameState.mines === 0 ? 'disabled' : ''}>Assign Miner</button></div>
+                <div class="job-line">Soldiers: ${gameState.soldiers} | <button onclick="assignJob('soldier')" ${gameState.idle === 0 || (gameState.knives === 0 && gameState.swords === 0) ? 'disabled' : ''}>Assign Soldier</button></div>
+            `;
+
+            // Science tab
+            const scienceRate = gameState.libraries * 0.2 + gameState.librarians * 1;
+            document.getElementById('science-display').textContent = Math.floor(gameState.science);
+            document.getElementById('science-rate').textContent = scienceRate.toFixed(1);
+            
+            document.getElementById('technology').innerHTML = `
+                <div class="tech-line">Farming: ${gameState.tech.farming ? 'RESEARCHED' : '<button onclick="researchTech(\'farming\')" ' + (gameState.science < 100 ? 'disabled' : '') + '>Research (100 Science)</button>'}</div>
+                <div class="tech-line">Mining: ${gameState.tech.mining ? 'RESEARCHED' : '<button onclick="researchTech(\'mining\')" ' + (!gameState.tech.farming || gameState.science < 250 ? 'disabled' : '') + '>Research (250 Science)</button>'}</div>
+                <div class="tech-line">Smelting: ${gameState.tech.smelting ? 'RESEARCHED' : '<button onclick="researchTech(\'smelting\')" ' + (!gameState.tech.mining || gameState.science < 300 ? 'disabled' : '') + '>Research (300 Science)</button>'}</div>
+            `;
+
+            // Defense tab
+            const manpowerRate = gameState.soldiers * 0.5;
+            const defenseRating = gameState.manpower + gameState.knives * 2 + gameState.swords * 5;
+            
+            document.getElementById('weapons').innerHTML = `
+                <div>Knives: ${gameState.knives} | <button onclick="craftWeapon('knife')" ${gameState.iron < 2 ? 'disabled' : ''}>Craft Knife (2 Iron)</button></div>
+                <div>Swords: ${gameState.swords} | <button onclick="craftWeapon('sword')" ${gameState.iron < 5 ? 'disabled' : ''}>Craft Sword (5 Iron)</button></div>
+            `;
+            
+            document.getElementById('defense-display').innerHTML = `
+                <div>Manpower: ${Math.floor(gameState.manpower)} (+${manpowerRate.toFixed(1)}/sec)</div>
+                <div>Defense Rating: ${Math.floor(defenseRating)}</div>
+                <div>Soldiers: ${gameState.soldiers}</div>
+            `;
+
+            // Exchange button
+            document.getElementById('exchange-btn').disabled = gameState.food < 10;
+        }
+
+        function gatherFood() {
+            gameState.food += 1;
+            updateDisplay();
+        }
+
+        function exchangeFood() {
+            if (gameState.food >= 10) {
+                gameState.food -= 10;
+                gameState.wood += 1;
+                updateDisplay();
+            }
+        }
+
+        function getBuildingCost(type) {
+            const baseCosts = {
+                house: 5,
+                library: 3,
+                field: 2,
+                mine: 4,
+                smelter: 200
+            };
+            
+            const buildingKey = type === 'house' ? 'houses' : type + 's';
+            const currentCount = gameState[buildingKey];
+            const baseCost = baseCosts[type];
+            
+            return Math.floor(baseCost * Math.pow(1.25, currentCount));
+        }
+
+        function buyBuilding(type) {
+            const cost = getBuildingCost(type);
+            const currency = type === 'smelter' ? 'stone' : 'wood';
+            
+            if (gameState[currency] >= cost) {
+                if (type === 'smelter' && !gameState.tech.smelting) return;
+                
+                gameState[currency] -= cost;
+                gameState[type === 'house' ? 'houses' : type + 's'] += 1;
+                
+                log(`Built 1 ${type} for ${cost} ${currency}`);
+                
+                // First house brings initial villagers
+                if (type === 'house' && gameState.houses === 1 && gameState.villagers === 0) {
+                    gameState.villagers = 2;
+                    gameState.idle = 2;
+                    gameState.nextBirth = Date.now() + 22000;
+                    log('2 villagers moved into your first house!');
+                } else if (type === 'house' && !gameState.nextBirth && gameState.villagers < gameState.houses * 2) {
+                    gameState.nextBirth = Date.now() + 22000;
+                }
+                
+                updateDisplay();
+            }
+        }
+
+        function assignJob(job) {
+            if (gameState.idle > 0) {
+                const requirements = {
+                    farmer: gameState.tech.farming && gameState.fields > 0,
+                    librarian: gameState.libraries > 0,
+                    miner: gameState.tech.mining && gameState.mines > 0,
+                    soldier: gameState.knives > 0 || gameState.swords > 0
+                };
+                
+                if (requirements[job]) {
+                    gameState.idle -= 1;
+                    gameState[job + 's'] += 1;
+                    log(`Assigned villager as ${job}`);
+                    updateDisplay();
+                }
+            }
+        }
+
+        function researchTech(tech) {
+            const costs = { farming: 100, mining: 250, smelting: 300 };
+            const cost = costs[tech];
+            
+            if (gameState.science >= cost) {
+                if (tech === 'mining' && !gameState.tech.farming) return;
+                if (tech === 'smelting' && !gameState.tech.mining) return;
+                
+                gameState.science -= cost;
+                gameState.tech[tech] = true;
+                log(`Researched ${tech}!`);
+                updateDisplay();
+            }
+        }
+
+        function craftWeapon(weapon) {
+            const costs = { knife: 2, sword: 5 };
+            const cost = costs[weapon];
+            
+            if (gameState.iron >= cost) {
+                gameState.iron -= cost;
+                gameState[weapon === 'knife' ? 'knives' : 'swords'] += 1;
+                log(`Crafted 1 ${weapon}`);
+                updateDisplay();
+            }
+        }
+
+        function gameLoop() {
+            const now = Date.now();
+            const deltaTime = now - gameState.lastUpdate;
+            gameState.lastUpdate = now;
+
+            // Resource generation
+            const deltaSeconds = deltaTime / 1000;
+            
+            // Food (fields + farmers - consumption)
+            const foodRate = gameState.fields * 0.5 + gameState.farmers * 2 - gameState.villagers * 0.2;
+            gameState.food = Math.max(0, gameState.food + foodRate * deltaSeconds);
+            
+            // Stone (mines + miners)
+            const stoneRate = gameState.mines * 0.3 + gameState.miners * 1.5;
+            gameState.stone += stoneRate * deltaSeconds;
+            
+            // Iron and Gold (smelters)
+            if (gameState.tech.smelting) {
+                gameState.iron += gameState.smelters * 0.8 * deltaSeconds;
+                gameState.gold += gameState.smelters * 0.1 * deltaSeconds;
+            }
+            
+            // Science (libraries + librarians)
+            const scienceRate = gameState.libraries * 0.2 + gameState.librarians * 1;
+            gameState.science += scienceRate * deltaSeconds;
+            
+            // Manpower (soldiers)
+            const manpowerRate = gameState.soldiers * 0.5;
+            gameState.manpower += manpowerRate * deltaSeconds;
+
+            // Population growth
+            if (gameState.nextBirth && now >= gameState.nextBirth) {
+                if (gameState.villagers < gameState.houses * 2) {
+                    gameState.villagers += 1;
+                    gameState.idle += 1;
+                    log('A new villager was born!');
+                    
+                    // Schedule next birth if still under capacity
+                    if (gameState.villagers < gameState.houses * 2) {
+                        gameState.nextBirth = now + 22000;
+                    } else {
+                        gameState.nextBirth = null;
+                    }
+                } else {
+                    gameState.nextBirth = null;
+                }
+            }
+
+            // Season progression
+            gameState.seasonProgress += deltaTime / seasonDuration;
+            
+            if (gameState.seasonProgress >= 1) {
+                gameState.seasonProgress = 0;
+                const currentIndex = seasons.indexOf(gameState.season);
+                gameState.season = seasons[(currentIndex + 1) % seasons.length];
+                log(`Season changed to ${gameState.season}`);
+                
+                // Summer attack check
+                if (gameState.season === 'SUMMER') {
+                    if (Math.random() < 0.4) { // 40% chance in summer
+                        enemyAttack();
+                    }
+                } else if (Math.random() < 0.1) { // 10% chance other seasons
+                    enemyAttack();
+                }
+            }
+
+            updateDisplay();
+        }
+
+        function enemyAttack() {
+            const enemyForce = Math.floor(Math.random() * 20) + 10;
+            const ourDefense = gameState.manpower + gameState.knives * 2 + gameState.swords * 5;
+            
+            log(`<span class="warning">ENEMY ATTACK! Enemy force: ${enemyForce}</span>`);
+            
+            if (ourDefense >= enemyForce) {
+                log('Successfully defended against the attack!');
+                gameState.manpower = Math.max(0, gameState.manpower - enemyForce * 0.3);
+            } else {
+                const damage = enemyForce - ourDefense;
+                const foodLost = Math.min(gameState.food, damage * 5);
+                const woodLost = Math.min(gameState.wood, damage * 2);
+                
+                gameState.food -= foodLost;
+                gameState.wood -= woodLost;
+                gameState.manpower = Math.max(0, gameState.manpower * 0.5);
+                
+                log(`<span class="warning">Attack successful! Lost ${Math.floor(foodLost)} food and ${Math.floor(woodLost)} wood!</span>`);
+            }
+        }
+	function getBuildingCost(type) {
+            	const baseCosts = {
+                house: 15,
+                library: 25,
+                field: 25,
+                mine: 50,
+                smelter: 100
+            };
+        // Start the game loop
+        setInterval(gameLoop, 100);
+        updateDisplay();
+    </script>
+</body>
+</html>
