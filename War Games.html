@@ -393,7 +393,7 @@
             // Buildings
             document.getElementById('buildings').innerHTML = `
                 <div class="building-line">Houses: ${gameState.houses} | <button onclick="buyBuilding('house')" ${gameState.wood < getBuildingCost('house') ? 'disabled' : ''}>Buy House (${getBuildingCost('house')} Wood)</button></div>
-                <div class="building-line">Libraries: ${gameState.libraries} | <button onclick="buyBuilding('libraries')" ${gameState.wood < getBuildingCost('libraries') ? 'disabled' : ''}>Buy Library (${getBuildingCost('libraries')} Wood)</button></div>
+                <div class="building-line">Libraries: ${gameState.libraries} | <button onclick="buyBuilding('library')" ${gameState.wood < getBuildingCost('library') ? 'disabled' : ''}>Buy Library (${getBuildingCost('library')} Wood)</button></div>
                 <div class="building-line">Fields: ${gameState.fields} | <button onclick="buyBuilding('field')" ${gameState.wood < getBuildingCost('field') ? 'disabled' : ''}>Buy Field (${getBuildingCost('field')} Wood)</button></div>
                 <div class="building-line">Mines: ${gameState.mines} | <button onclick="buyBuilding('mine')" ${gameState.wood < getBuildingCost('mine') ? 'disabled' : ''}>Buy Mine (${getBuildingCost('mine')} Wood)</button></div>
                 <div class="building-line">Smelters: ${gameState.smelters} | <button onclick="buyBuilding('smelter')" ${!gameState.tech.smelting || gameState.stone < getBuildingCost('smelter') ? 'disabled' : ''}>Buy Smelter (${getBuildingCost('smelter')} Stone)</button></div>
@@ -467,7 +467,7 @@
         function getBuildingCost(type) {
             const baseCosts = {
                 house: 15,
-                libraries: 25,
+                library: 25,
                 field: 15,  // Changed from 25 to 15
                 mine: 50,
                 smelter: 100
